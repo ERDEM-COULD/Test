@@ -1,21 +1,69 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Sözleşme</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sözleşme Kabul</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    button { font-size: 20px; padding: 15px 30px; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <h1>Lütfen Sözleşmeyi Kabul Edin</h1>
-  <button id="acceptBtn">Kabul Et</button>
+
+  <h1>Merhaba, sözleşmeyi kabul etmek için butona basınız.</h1>
+  <button id="acceptBtn">Sözleşmeyi Kabul Et</button>
+
+  <div id="result" style="margin-top:20px;"></div>
 
   <script>
-    document.getElementById("acceptBtn").addEventListener("click", async () => {
-      const response = await fetch("/api/accept", {
-        method: "POST",
-      });
-      const result = await response.json();
-      alert("Veri kaydedildi: " + JSON.stringify(result));
+    const btn = document.getElementById('acceptBtn');
+    const resultDiv = document.getElementById('result');
+
+    btn.addEventListener('click', () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          position => {
+            sendData(position.coords);
+          },
+          err => {
+            // Konum izni reddedilirse sadece IP ve User Agent gönderilecek
+            sendData(null);
+          }
+        );
+      } else {
+        sendData(null);
+      }
     });
+
+    function sendData(coords) {
+      const data = {};
+
+      if (coords) {
+        data.location = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy
+        };
+      }
+
+      fetch('/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(json => {
+        resultDiv.innerHTML = `<pre>${JSON.stringify(json, null, 2)}</pre>`;
+        btn.disabled = true;
+        btn.innerText = 'Kabul Edildi';
+      })
+      .catch(err => {
+        resultDiv.textContent = 'Sunucu ile iletişimde hata oluştu.';
+        console.error(err);
+      });
+    }
   </script>
+
 </body>
 </html>
