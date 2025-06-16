@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Sözleşme</title>
+</head>
+<body>
+  <h1>Lütfen Sözleşmeyi Kabul Edin</h1>
+  <button id="acceptBtn">Kabul Et</button>
+
+  <script>
+    document.getElementById("acceptBtn").addEventListener("click", async () => {
+      const response = await fetch("/api/accept", {
+        method: "POST",
+      });
+      const result = await response.json();
+      alert("Veri kaydedildi: " + JSON.stringify(result));
+    });
+  </script>
+</body>
+</html>
