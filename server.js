@@ -1,32 +1,23 @@
-const express = require("express");
-const fs = require("fs");
+const express = require('express');
 const app = express();
-const PORT = 3000; // ← Burayı değiştirdik
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.static("public"));
 
-app.post("/api/accept", (req, res) => {
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  const userAgent = req.headers["user-agent"];
-
-  const data = {
-    ip,
-    userAgent,
-    acceptedAt: new Date().toISOString(),
-  };
-
-  const filePath = "accepted_users.json";
-  const existing = fs.existsSync(filePath)
-    ? JSON.parse(fs.readFileSync(filePath))
-    : [];
-
-  existing.push(data);
-  fs.writeFileSync(filePath, JSON.stringify(existing, null, 2));
-
-  res.json({ status: "ok", saved: data });
+// Basit ana sayfa
+app.get('/', (req, res) => {
+  res.send('Merhaba, sözleşme kabul sunucusu çalışıyor!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
+// Örnek POST endpoint
+app.post('/sozlesme-kabul', (req, res) => {
+  const userData = req.body;
+  console.log('Kabul eden kullanıcı verisi:', userData);
+  // Burada veriyi json dosyasına veya DB'ye kaydedebilirsin.
+  res.json({ status: 'kabul alındı', data: userData });
 });
+
+app.listen(port, () => {
+  console.log(`Sunucu ${port} portunda çalışıyor.`);
+});
+
