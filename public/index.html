@@ -2,69 +2,64 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sözleşme Kabul</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-    button { font-size: 20px; padding: 15px 30px; cursor: pointer; }
-  </style>
+  <title>Konum Paylaşımı</title>
 </head>
 <body>
-
-  <h1>Merhaba, sözleşmeyi kabul etmek için butona basınız.</h1>
-  <button id="acceptBtn">Sözleşmeyi Kabul Et</button>
-
-  <div id="result" style="margin-top:20px;"></div>
+  <h1>Canlı Konum Paylaşımı</h1>
+  <button id="startTracking">Konumumu Göster ve Paylaş</button>
+  <pre id="locationData"></pre>
 
   <script>
-    const btn = document.getElementById('acceptBtn');
-    const resultDiv = document.getElementById('result');
+    const locationData = document.getElementById('locationData');
+    const startTracking = document.getElementById('startTracking');
+    let watchId = null;
 
-    btn.addEventListener('click', () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          position => {
-            sendData(position.coords);
-          },
-          err => {
-            // Konum izni reddedilirse sadece IP ve User Agent gönderilecek
-            sendData(null);
-          }
-        );
-      } else {
-        sendData(null);
-      }
-    });
-
-    function sendData(coords) {
-      const data = {};
-
-      if (coords) {
-        data.location = {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          accuracy: coords.accuracy
-        };
+    startTracking.onclick = () => {
+      if (!navigator.geolocation) {
+        alert("Tarayıcınız konum servislerini desteklemiyor.");
+        return;
       }
 
-      fetch('/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      })
-      .then(res => res.json())
-      .then(json => {
-        resultDiv.innerHTML = `<pre>${JSON.stringify(json, null, 2)}</pre>`;
-        btn.disabled = true;
-        btn.innerText = 'Kabul Edildi';
-      })
-      .catch(err => {
-        resultDiv.textContent = 'Sunucu ile iletişimde hata oluştu.';
-        console.error(err);
-      });
-    }
+      if (watchId) {
+        // İzlemeyi durdurmak istersen
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        startTracking.textContent = "Konumumu Göster ve Paylaş";
+        locationData.textContent = "";
+        return;
+      }
+
+      startTracking.textContent = "Konum Paylaşılıyor...";
+
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const coords = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: new Date(position.timestamp).toLocaleString()
+          };
+          locationData.textContent = JSON.stringify(coords, null, 2);
+
+          // İstersen server'a gönder:
+          /*
+          fetch('/save-location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(coords)
+          });
+          */
+        },
+        (err) => {
+          alert('Konum alınamadı: ' + err.message);
+          startTracking.textContent = "Konumumu Göster ve Paylaş";
+          watchId = null;
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
+      );
+    };
   </script>
-
 </body>
 </html>
+
 
