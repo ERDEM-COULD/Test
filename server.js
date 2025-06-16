@@ -1,22 +1,23 @@
-const express = require('express');
+const fs = require('fs');
 const path = require('path');
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// public klasörünü statik olarak servis et
-app.use(express.static(path.join(__dirname, 'public')));
-
-// JSON body için middleware (POST isteği varsa)
-app.use(express.json());
-
-// İstersen konum verisini buradan al
 app.post('/location', (req, res) => {
   console.log('Konum verisi alındı:', req.body);
-  // Burada dosyaya yazabilir veya DB'ye kaydedebilirsin
-  res.json({ status: 'success', received: req.body });
-});
 
-app.listen(PORT, () => {
-  console.log(`Sunucu ${PORT} portunda çalışıyor.`);
+  const filePath = path.join(__dirname, 'locations.json');
+  let locations = [];
+
+  // Eğer dosya varsa oku
+  if (fs.existsSync(filePath)) {
+    const data = fs.readFileSync(filePath, 'utf8');
+    locations = JSON.parse(data);
+  }
+
+  // Yeni konumu ekle
+  locations.push(req.body);
+
+  // Güncellenmiş listeyi dosyaya yaz
+  fs.writeFileSync(filePath, JSON.stringify(locations, null, 2));
+
+  res.json({ status: 'success', received: req.body });
 });
