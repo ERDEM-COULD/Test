@@ -1,23 +1,32 @@
 const express = require('express');
+const path = require('path');
 const app = express();
-const port = process.env.PORT || 3000;
 
 app.use(express.json());
 
-// Basit ana sayfa
-app.get('/', (req, res) => {
-  res.send('Merhaba, sözleşme kabul sunucusu çalışıyor!');
+// Statik dosyaları servis et (index.html gibi)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// POST /accept — kullanıcı kabul ettiğinde bilgiler burada toplanır
+app.post('/accept', (req, res) => {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const userAgent = req.get('User-Agent');
+  const location = req.body.location || null; // İstemciden gelen konum
+
+  const info = {
+    ip,
+    userAgent,
+    location,
+    timestamp: new Date().toISOString()
+  };
+
+  console.log('Kabul edilen bilgiler:', info);
+
+  // JSON dosyaya veya veritabanına kaydedebilirsin. Şimdilik konsola yazıyoruz.
+  
+  res.json({ status: 'Kabul edildi', info });
 });
 
-// Örnek POST endpoint
-app.post('/sozlesme-kabul', (req, res) => {
-  const userData = req.body;
-  console.log('Kabul eden kullanıcı verisi:', userData);
-  // Burada veriyi json dosyasına veya DB'ye kaydedebilirsin.
-  res.json({ status: 'kabul alındı', data: userData });
-});
-
-app.listen(port, () => {
-  console.log(`Sunucu ${port} portunda çalışıyor.`);
-});
-
+// Sunucuyu 3000 portunda başlat
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Sunucu port ${PORT} da çalışıyor...`));
