@@ -7,7 +7,11 @@
 <body>
   <h1>Canlı Konum Paylaşımı</h1>
   <button id="startTracking">Konumumu Göster ve Paylaş</button>
-  <pre id="locationData"></pre>
+
+  <div style="margin-top:20px;">
+    <p><strong>Konum veriniz JSON'a yazılıyor:</strong></p>
+    <pre id="locationData" style="background:#f0f0f0; padding:10px; border-radius:5px; max-width:500px;"></pre>
+  </div>
 
   <script>
     const locationData = document.getElementById('locationData');
@@ -21,7 +25,6 @@
       }
 
       if (watchId) {
-        // İzlemeyi durdurmak istersen
         navigator.geolocation.clearWatch(watchId);
         watchId = null;
         startTracking.textContent = "Konumumu Göster ve Paylaş";
@@ -40,15 +43,6 @@
             timestamp: new Date(position.timestamp).toLocaleString()
           };
           locationData.textContent = JSON.stringify(coords, null, 2);
-
-          // İstersen server'a gönder:
-          /*
-          fetch('/save-location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(coords)
-          });
-          */
         },
         (err) => {
           alert('Konum alınamadı: ' + err.message);
